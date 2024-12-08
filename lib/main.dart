@@ -178,8 +178,9 @@ class _ShowCaseOfImages extends State<ShowCase> {
           ),
         ),
         title: const Text(
-          "OutfitMe",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          "OutfitME",
+          style: TextStyle(
+              fontWeight: FontWeight.bold, color: Colors.white, fontSize: 35),
         ),
         centerTitle: true,
       ),
@@ -198,7 +199,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
               width: 4,
               color: Colors.yellow,
             )),*/
-            child: Column(
+            child: Row(
               children: [
                 Expanded(
                   child: ScrollSnapList(
