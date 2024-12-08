@@ -3,13 +3,15 @@ import 'package:scroll_snap_list/scroll_snap_list.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MainApp());
+  runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: ShowCase(),
     );
@@ -17,6 +19,8 @@ class MainApp extends StatelessWidget {
 }
 
 class ShowCase extends StatefulWidget {
+  const ShowCase({super.key});
+
   @override
   _ShowCaseOfImages createState() => _ShowCaseOfImages();
 }
@@ -28,11 +32,11 @@ class _ShowCaseOfImages extends State<ShowCase> {
     "assets/images/fitGrey.webp",
     "assets/images/fitRed.jpg"
   ];
-  int get _itemCount => 2000;
-  int currentIndex = 500;
+  int get _itemCount => 500;
+  int currentIndex = 250;
   Widget _buildItemList(BuildContext context, int index) {
     int adjustedIndex = index % images.length;
-    return Container(
+    return SizedBox(
       width: 220,
       /*decoration: BoxDecoration(
         border: Border.all(
@@ -80,11 +84,11 @@ class _ShowCaseOfImages extends State<ShowCase> {
       body: Column(
         children: [
           Container(
-            margin: EdgeInsets.only(top: 10),
+            margin: const EdgeInsets.only(top: 10),
             child: const Text("Выберите элемент одежды:",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25)),
           ),
-          Container(
+          SizedBox(
             width: 450,
             height: 300,
             /* decoration: BoxDecoration(
@@ -107,7 +111,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
                       });
                       print("Фокус на элементе: $index");
                     },
-                    initialIndex: 500,
+                    initialIndex: 250,
                   ),
                 ),
               ],
