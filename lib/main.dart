@@ -98,7 +98,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
                   child: ScrollSnapList(
                     itemBuilder: _buildItemList,
                     itemSize: 220,
-                    dynamicItemOpacity: 0.3,
+                    dynamicItemOpacity: 0.4,
                     dynamicItemSize: true,
                     itemCount: _itemCount,
                     onItemFocus: (index) {
