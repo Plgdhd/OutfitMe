@@ -55,3 +55,4 @@ app.*.map.json
 analysis_options
 outfit_me.iml
 pubspec.lock
+/windows
