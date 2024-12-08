@@ -15,7 +15,19 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.2.18
 
+flutter_native_splash:
+  color: "#ffffff"
+  image: "assets/images/fitRed.jpg"
+  android: true
+  ios: true
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/fitRed.jpg"
 flutter:
   uses-material-design: true
   assets:
