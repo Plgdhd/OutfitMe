@@ -52,7 +52,7 @@ app.*.map.json
 /macos
 /web
 .metadata
-analysis_options
+analysis_options.yaml
 outfit_me.iml
 pubspec.lock
 /windows
