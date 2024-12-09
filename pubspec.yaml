@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   scroll_snap_list: ^0.8.0
+  image_picker: ^1.1.2 
 
 dev_dependencies:
   flutter_test:

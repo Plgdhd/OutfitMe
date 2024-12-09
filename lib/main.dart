@@ -1,14 +1,15 @@
 import 'dart:core';
+import 'dart:io';
 import 'package:scroll_snap_list/scroll_snap_list.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(const MainApp());
 }
 
 class MainApp extends StatefulWidget {
-  const MainApp();
+  const MainApp({super.key});
 
   @override
   _MainAppState createState() => _MainAppState();
@@ -106,7 +107,7 @@ class _MainAppState extends State<MainApp> {
 }
 
 class ShowCase extends StatefulWidget {
-  const ShowCase();
+  const ShowCase({super.key});
 
   @override
   _ShowCaseOfImages createState() => _ShowCaseOfImages();
@@ -119,8 +120,12 @@ class _ShowCaseOfImages extends State<ShowCase> {
     "assets/images/fitGrey.webp",
     "assets/images/fitRed.jpg"
   ];
+
   int get _itemCount => 500;
   int currentIndex = 250;
+  String textPhoto = "Выбрать фото";
+  File? _selectedImage;
+
   Widget _buildItemList(BuildContext context, int index) {
     int adjustedIndex = index % images.length;
     return SizedBox(
@@ -220,8 +225,77 @@ class _ShowCaseOfImages extends State<ShowCase> {
               ],
             ),
           ),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                //передача изображения в с++ или файл хз
+              },
+              style: const ButtonStyle(
+                backgroundColor: WidgetStatePropertyAll<Color?>(
+                  Color.fromRGBO(245, 28, 86, 1),
+                ),
+              ),
+              child: const Text("Примерить",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold)),
+            ),
+          ),
+          Container(
+              margin: const EdgeInsets.only(top: 30),
+              height: 200,
+              width: 200,
+              decoration: BoxDecoration(
+                  border: Border.all(
+                    width: 3,
+                    color: const Color.fromRGBO(245, 28, 86, 1),
+                  ),
+                  borderRadius: BorderRadius.circular(23)),
+              child: Center(
+                child: _selectedImage != null
+                    ? Image.file(_selectedImage!)
+                    : const Text("Ваше фото тута",
+                        style: TextStyle(letterSpacing: 5)),
+              )),
+          Container(
+            margin: const EdgeInsets.only(top: 30),
+            width: 350,
+            height: 70,
+            child: ElevatedButton(
+              onPressed: () {
+                pickImageFromGallery();
+                textPhoto = "путь или название хз";
+                Text(textPhoto);
+              },
+              style: const ButtonStyle(
+                backgroundColor: WidgetStatePropertyAll(
+                  Color.fromRGBO(245, 28, 86, 1),
+                ),
+              ),
+              child: Text(
+                textPhoto,
+                style: const TextStyle(
+                  fontSize: 40,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Future pickImageFromGallery() async {
+    final gainedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _selectedImage = File(gainedImage!.path);
+    });
   }
 }
