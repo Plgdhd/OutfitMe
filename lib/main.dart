@@ -120,7 +120,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
     "assets/images/fitGrey.webp",
     "assets/images/fitRed.jpg"
   ];
-
+  bool isPressed = false;
   int get _itemCount => 500;
   int currentIndex = 250;
   String textPhoto = "Выбрать фото";
@@ -243,21 +243,30 @@ class _ShowCaseOfImages extends State<ShowCase> {
             ),
           ),
           Container(
-              margin: const EdgeInsets.only(top: 30),
-              height: 200,
-              width: 200,
-              decoration: BoxDecoration(
-                  border: Border.all(
-                    width: 3,
-                    color: const Color.fromRGBO(245, 28, 86, 1),
-                  ),
-                  borderRadius: BorderRadius.circular(23)),
+            margin: const EdgeInsets.only(top: 30),
+            height: 200,
+            width: 200,
+            decoration: BoxDecoration(
+                border: Border.all(
+                  width: 3,
+                  color: const Color.fromRGBO(245, 28, 86, 1),
+                ),
+                borderRadius: BorderRadius.circular(23)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
               child: Center(
                 child: _selectedImage != null
-                    ? Image.file(_selectedImage!)
+                    ? Image.file(
+                        _selectedImage!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      )
                     : const Text("Ваше фото тута",
                         style: TextStyle(letterSpacing: 5)),
-              )),
+              ),
+            ),
+          ),
           Container(
             margin: const EdgeInsets.only(top: 30),
             width: 350,
@@ -265,8 +274,13 @@ class _ShowCaseOfImages extends State<ShowCase> {
             child: ElevatedButton(
               onPressed: () {
                 pickImageFromGallery();
-                textPhoto = "путь или название хз";
-                Text(textPhoto);
+                Text(textPhoto,
+                    style: TextStyle(
+                      fontSize: 40,
+                      color: Color.fromRGBO(255, 255, 255, 0.26),
+                      fontWeight: FontWeight.bold,
+                    ));
+                isPressed = true;
               },
               style: const ButtonStyle(
                 backgroundColor: WidgetStatePropertyAll(
@@ -275,9 +289,11 @@ class _ShowCaseOfImages extends State<ShowCase> {
               ),
               child: Text(
                 textPhoto,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 40,
-                  color: Colors.white,
+                  color: isPressed
+                      ? Color.fromRGBO(255, 255, 255, 0.579)
+                      : Color.fromRGBO(255, 255, 255, 1),
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
@@ -296,6 +312,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
 
     setState(() {
       _selectedImage = File(gainedImage!.path);
+      textPhoto = gainedImage.name;
     });
   }
 }
