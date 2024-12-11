@@ -3,8 +3,18 @@ import 'dart:io';
 import 'package:scroll_snap_list/scroll_snap_list.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:window_size/window_size.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    setWindowTitle('OutfitMe');
+    setWindowMinSize(const Size(580, 950));
+    setWindowMaxSize(const Size(580, 950));
+    setWindowFrame(const Rect.fromLTWH(100, 100, 1000, 700));
+  }
+
   runApp(const MainApp());
 }
 
@@ -80,7 +90,7 @@ class _MainAppState extends State<MainApp> {
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-        const ShowCase(),
+            const ShowCase(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = 0.0;
           const end = 1.0;
@@ -156,6 +166,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
     );
   }
 
+  bool _isHovered = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -165,18 +176,39 @@ class _ShowCaseOfImages extends State<ShowCase> {
         flexibleSpace: Align(
           alignment: Alignment.bottomLeft,
           child: Padding(
-            padding: const EdgeInsets.only(left: 20, bottom: 10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(50),
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                ),
-                child: const Image(
-                  image: AssetImage('assets/images/fitRed.jpg'),
-                  fit: BoxFit.cover,
+            padding: const EdgeInsets.only(left: 20, bottom: 10, top: 10),
+            child: MouseRegion(
+              onEnter: (_) {
+                setState(() {
+                  _isHovered = true;
+                });
+              },
+              onExit: (_) {
+                setState(() {
+                  _isHovered = false;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                width: _isHovered ? 35 : 30, // Увеличение при наведении
+                height: _isHovered ? 35 : 30, // Увеличение при наведении
+                child: GestureDetector(
+                  onTap: () {
+                    print("Кнопка нажата!");
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(50),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Image(
+                        image: AssetImage('assets/images/fitRed.jpg'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -243,9 +275,9 @@ class _ShowCaseOfImages extends State<ShowCase> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.only(top: 30),
-            height: 200,
-            width: 200,
+            margin: const EdgeInsets.only(top: 15),
+            height: 150,
+            width: 150,
             decoration: BoxDecoration(
                 border: Border.all(
                   width: 3,
@@ -257,26 +289,26 @@ class _ShowCaseOfImages extends State<ShowCase> {
               child: Center(
                 child: _selectedImage != null
                     ? Image.file(
-                  _selectedImage!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                )
+                        _selectedImage!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      )
                     : const Text("Ваше фото тута",
-                    style: TextStyle(letterSpacing: 5)),
+                        style: TextStyle(letterSpacing: 3)),
               ),
             ),
           ),
           Container(
-            margin: const EdgeInsets.only(top: 30),
-            width: 350,
-            height: 70,
+            margin: const EdgeInsets.only(top: 15),
+            width: 250,
+            height: 50,
             child: ElevatedButton(
               onPressed: () {
                 pickImageFromGallery();
                 Text(textPhoto,
                     style: TextStyle(
-                      fontSize: 40,
+                      fontSize: 20,
                       color: Color.fromRGBO(255, 255, 255, 0.26),
                       fontWeight: FontWeight.bold,
                     ));
@@ -290,7 +322,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
               child: Text(
                 textPhoto,
                 style: TextStyle(
-                  fontSize: 40,
+                  fontSize: 20,
                   color: isPressed
                       ? Color.fromRGBO(255, 255, 255, 0.579)
                       : Color.fromRGBO(255, 255, 255, 1),
@@ -308,7 +340,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
 
   Future pickImageFromGallery() async {
     final gainedImage =
-    await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.gallery);
 
     setState(() {
       _selectedImage = File(gainedImage!.path);
