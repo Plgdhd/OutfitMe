@@ -80,7 +80,7 @@ class _MainAppState extends State<MainApp> {
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const ShowCase(),
+        const ShowCase(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = 0.0;
           const end = 1.0;
@@ -257,13 +257,13 @@ class _ShowCaseOfImages extends State<ShowCase> {
               child: Center(
                 child: _selectedImage != null
                     ? Image.file(
-                        _selectedImage!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      )
+                  _selectedImage!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                )
                     : const Text("Ваше фото тута",
-                        style: TextStyle(letterSpacing: 5)),
+                    style: TextStyle(letterSpacing: 5)),
               ),
             ),
           ),
@@ -308,7 +308,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
 
   Future pickImageFromGallery() async {
     final gainedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+    await ImagePicker().pickImage(source: ImageSource.gallery);
 
     setState(() {
       _selectedImage = File(gainedImage!.path);

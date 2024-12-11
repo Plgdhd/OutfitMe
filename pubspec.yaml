@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   scroll_snap_list: ^0.8.0
-  image_picker: ^1.1.2 
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -28,7 +28,10 @@ flutter_native_splash:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/fitRed.jpg"
+  image_path: "assets/images/fitRed.jpg" # Передний план
+
+
+
 flutter:
   uses-material-design: true
   assets:
