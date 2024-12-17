@@ -12,6 +12,8 @@ dependencies:
   scroll_snap_list: ^0.8.0
   image_picker: ^1.1.2
   window_size: ^0.1.0
+  ffi: ^2.0.1
+  process_run: ^1.2.2+1
 
 dev_dependencies:
   flutter_test:

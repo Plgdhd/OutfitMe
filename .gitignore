@@ -8,6 +8,8 @@
 .buildlog/
 .history
 .svn/
+*.dll
+*.ipch
 migrate_working_dir/
 
 # IntelliJ related
@@ -31,6 +33,7 @@ migrate_working_dir/
 .pub/
 /build/
 
+
 # Symbolication related
 app.*.symbols
 
@@ -41,3 +44,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/clTest/.vs/clTest/v17/ipch/AutoPCH/5c3f43867b28cec5/CLTEST.ipch
+/clTest/.vs/clTest/v17/ipch/AutoPCH/5cc90ac8efbfcb23/CLTEST.ipch
+/clTest/.vs/clTest/v17/ipch/AutoPCH/3e95ccc974d1a63b/CLTEST.ipch
+/clTest/x64/Debug/opencv_world4100d.dll
