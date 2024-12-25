@@ -264,12 +264,20 @@ class _ShowCaseOfImages extends State<ShowCase> {
               onPressed: () async {
                 try {
                   String exePath = 'clTest\\x64\\Debug\\clTest.exe';
+<<<<<<< HEAD
 
                   await Process.start(
                     exePath,
                     [],
                     mode: ProcessStartMode.normal,
                     runInShell: false,
+=======
+                  await Process.start(
+                    exePath,
+                    [],
+                    mode: ProcessStartMode.detached,
+                    runInShell: true,
+>>>>>>> e5911434e01e189b41bed0611fac4d5e46837c97
                   );
 
                   print('Exe файл успешно запущен!');

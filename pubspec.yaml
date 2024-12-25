@@ -14,7 +14,10 @@ dependencies:
   window_size: ^0.1.0
   ffi: ^2.0.1
   process_run: ^1.2.2+1
+<<<<<<< HEAD
   path_provider: ^2.0.12
+=======
+>>>>>>> e5911434e01e189b41bed0611fac4d5e46837c97
 
 dev_dependencies:
   flutter_test:

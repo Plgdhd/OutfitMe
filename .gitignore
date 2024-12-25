@@ -8,6 +8,8 @@
 .buildlog/
 .history
 .svn/
+*.dll
+*.ipch
 migrate_working_dir/
 
 # IntelliJ related
@@ -30,6 +32,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+
 
 # Symbolication related
 app.*.symbols
