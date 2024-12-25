@@ -1,11 +1,13 @@
 import 'dart:core';
+import 'dart:ffi' hide Size;
 import 'dart:io';
 import 'package:scroll_snap_list/scroll_snap_list.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:window_size/window_size.dart';
+import 'package:process_run/process_run.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -259,19 +261,35 @@ class _ShowCaseOfImages extends State<ShowCase> {
           ),
           Center(
             child: ElevatedButton(
-              onPressed: () {
-                //передача изображения в с++ или файл хз
+              onPressed: () async {
+                try {
+                  String exePath = 'clTest\\x64\\Debug\\clTest.exe';
+
+                  await Process.start(
+                    exePath,
+                    [],
+                    mode: ProcessStartMode.normal,
+                    runInShell: false,
+                  );
+
+                  print('Exe файл успешно запущен!');
+                } catch (e) {
+                  print('Ошибка при запуске exe файла: $e');
+                }
               },
               style: const ButtonStyle(
                 backgroundColor: WidgetStatePropertyAll<Color?>(
                   Color.fromRGBO(245, 28, 86, 1),
                 ),
               ),
-              child: const Text("Примерить",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Примерить",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
           Container(
@@ -338,7 +356,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
     );
   }
 
-  Future pickImageFromGallery() async {
+  Future<void> pickImageFromGallery() async {
     final gainedImage =
         await ImagePicker().pickImage(source: ImageSource.gallery);
 
@@ -346,5 +364,22 @@ class _ShowCaseOfImages extends State<ShowCase> {
       _selectedImage = File(gainedImage!.path);
       textPhoto = gainedImage.name;
     });
+    if (gainedImage != null) {
+      await saveImagePathToFile(gainedImage.path);
+      print('Путь изображения сохранен: ${gainedImage.path}');
+    } else {
+      print('Изображение не выбрано.');
+    }
+  }
+
+  Future<void> saveImagePathToFile(String imagePath) async {
+    try {
+      final inputFile = File('clTest/x64/Debug/input.txt');
+
+      await inputFile.writeAsString(imagePath);
+      print('Путь изображения сохранен в файл input.txt: $imagePath');
+    } catch (e) {
+      print('Ошибка при сохранении пути: $e');
+    }
   }
 }

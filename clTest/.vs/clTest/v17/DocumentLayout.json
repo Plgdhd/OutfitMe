@@ -1,0 +1,41 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "H:\\OutfitME\\outfit_me\\clTest\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{EB8918E9-61FE-4C57-BDC3-C1EAE59F8351}|clTest.vcxproj|H:\\OutfitME\\outfit_me\\clTest\\clTest.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{EB8918E9-61FE-4C57-BDC3-C1EAE59F8351}|clTest.vcxproj|solutionrelative:clTest.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "clTest.cpp",
+              "DocumentMoniker": "H:\\OutfitME\\outfit_me\\clTest\\clTest.cpp",
+              "RelativeDocumentMoniker": "clTest.cpp",
+              "ToolTip": "H:\\OutfitME\\outfit_me\\clTest\\clTest.cpp",
+              "RelativeToolTip": "clTest.cpp",
+              "ViewState": "AgIAADAAAAAAAAAAAAAAAEUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-12-23T10:51:13.389Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
