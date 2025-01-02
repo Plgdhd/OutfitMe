@@ -5,6 +5,7 @@ import 'package:scroll_snap_list/scroll_snap_list.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:window_size/window_size.dart';
+import 'final.dart';
 import 'package:process_run/process_run.dart';
 
 Future<void> main() async {
@@ -39,6 +40,7 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(fontFamily: 'Roboto'),
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Stack(
@@ -59,15 +61,17 @@ class _MainAppState extends State<MainApp> {
                     Text(
                       "OutfitMe",
                       style: TextStyle(
-                        fontSize: 80,
+                        fontFamily: 'Astro',
+                        fontSize: 50,
                         color: Color.fromRGBO(245, 28, 86, 1),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(
-                      height: 250,
+                      height: 200,
                     ),
-                    CircularProgressIndicator(),
+                    CircularProgressIndicator(
+                        color: Color.fromRGBO(245, 28, 86, 1)),
                   ],
                 ),
               ),
@@ -128,15 +132,21 @@ class ShowCase extends StatefulWidget {
 class _ShowCaseOfImages extends State<ShowCase> {
   List<String> images = [
     "assets/images/pivo.png",
-    "assets/images/MegaShoes.png",
-    "assets/images/fitGrey.webp",
-    "assets/images/fitRed.jpg"
+    "assets/images/pants.png",
+    "assets/images/shorts.png",
+    "assets/images/nikitasOutfit.png",
+    "assets/images/Black.png",
+    "assets/images/tshirt.png",
+    "assets/images/printedTshirt.png",
+    "assets/images/textTshirt.png"
   ];
   bool isPressed = false;
   int get _itemCount => 500;
   int currentIndex = 250;
   String textPhoto = "Выбрать фото";
   File? _selectedImage;
+  int wearIndex = 0;
+  File? wearType = File('clTest/x64/Debug/wearPath.txt');
 
   Widget _buildItemList(BuildContext context, int index) {
     int adjustedIndex = index % images.length;
@@ -219,7 +229,10 @@ class _ShowCaseOfImages extends State<ShowCase> {
         title: const Text(
           "OutfitME",
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.white, fontSize: 35),
+              fontFamily: 'Astro',
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 25),
         ),
         centerTitle: true,
       ),
@@ -228,7 +241,10 @@ class _ShowCaseOfImages extends State<ShowCase> {
           Container(
             margin: const EdgeInsets.only(top: 40),
             child: const Text("Выберите элемент одежды:",
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 26)),
+                style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 26,
+                    color: Color.fromRGBO(245, 28, 86, 1))),
           ),
           SizedBox(
             width: 450,
@@ -250,7 +266,9 @@ class _ShowCaseOfImages extends State<ShowCase> {
                     onItemFocus: (index) {
                       setState(() {
                         currentIndex = index % images.length;
+                        wearIndex = index % images.length;
                       });
+
                       print("Фокус на элементе: $index");
                     },
                     initialIndex: 250,
@@ -264,26 +282,27 @@ class _ShowCaseOfImages extends State<ShowCase> {
               onPressed: () async {
                 try {
                   String exePath = 'clTest\\x64\\Debug\\clTest.exe';
-<<<<<<< HEAD
-
-                  await Process.start(
-                    exePath,
-                    [],
-                    mode: ProcessStartMode.normal,
-                    runInShell: false,
-=======
                   await Process.start(
                     exePath,
                     [],
                     mode: ProcessStartMode.detached,
-                    runInShell: true,
->>>>>>> e5911434e01e189b41bed0611fac4d5e46837c97
+                    runInShell: false,
                   );
-
                   print('Exe файл успешно запущен!');
                 } catch (e) {
                   print('Ошибка при запуске exe файла: $e');
                 }
+                try {
+                  await wearType!.writeAsString(images[wearIndex]);
+                  print(
+                      ' файл с одеждой успешно записан с индексом $wearIndex!');
+                } catch (e) {
+                  print(" Ошибка сохранения пути одежды $e!");
+                }
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ResultScreen()));
               },
               style: const ButtonStyle(
                 backgroundColor: WidgetStatePropertyAll<Color?>(
@@ -321,7 +340,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
                         height: double.infinity,
                       )
                     : const Text("Ваше фото тута",
-                        style: TextStyle(letterSpacing: 3)),
+                        style: TextStyle(letterSpacing: 2)),
               ),
             ),
           ),
@@ -333,7 +352,7 @@ class _ShowCaseOfImages extends State<ShowCase> {
               onPressed: () {
                 pickImageFromGallery();
                 Text(textPhoto,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
                       color: Color.fromRGBO(255, 255, 255, 0.26),
                       fontWeight: FontWeight.bold,
@@ -350,8 +369,8 @@ class _ShowCaseOfImages extends State<ShowCase> {
                 style: TextStyle(
                   fontSize: 20,
                   color: isPressed
-                      ? Color.fromRGBO(255, 255, 255, 0.579)
-                      : Color.fromRGBO(255, 255, 255, 1),
+                      ? const Color.fromRGBO(255, 255, 255, 0.579)
+                      : const Color.fromRGBO(255, 255, 255, 1),
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
