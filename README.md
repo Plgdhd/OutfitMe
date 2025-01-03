@@ -1,16 +1,13 @@
 # outfitme_final
 
-A new Flutter project.
+Project for university lab.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project is a online wardrobe for windows.
 
-A few resources to get you started if this is your first Flutter project:
+A few resources to use this project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- downloaded opencv https://opencv.org/
+- full project resources you can get here: https://drive.google.com/drive/folders/1K6mxqzmFAT3wEMA12XwNWjhVSuHJ3yOG
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
