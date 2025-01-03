@@ -51,13 +51,13 @@ flutter:
   assets:
     - assets/images/fitGrey.webp
     - assets/images/fitRed.jpg
-    - assets/icons/fit.jpg
-    - assets/images/pivo.png
-    - assets/images/MegaShoes.png
+    - assets/images/glasses.png
+    - assets/images/glasses2.png
+    - assets/images/hat.png
+    - assets/images/hat2.png
     - assets/images/pants.png
-    - assets/images/shorts.png
-    - assets/images/nikitasOutfit.png
-    - assets/images/Black.png
+    - assets/images/pants2.png
     - assets/images/tshirt.png
-    - assets/images/printedTshirt.png
-    - assets/images/textTshirt.png
+    - assets/images/tshirt2.png
+    - assets/images/tshirt3.png
+    - assets/images/tshirt4.png

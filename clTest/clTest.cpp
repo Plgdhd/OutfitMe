@@ -1,259 +1,356 @@
 ﻿#include <opencv2/opencv.hpp>
-#include <iostream>
 #include <opencv2/dnn.hpp>
-#include <string>
+#include <iostream>
 #include <vector>
+#include <string>
+#include <fstream>
 
 using namespace cv;
-using namespace std;
 using namespace dnn;
+using namespace std;
 
-vector<Point> detectBodyKeypoints(const Mat& person);
-void overlayImage(const Mat& background, const Mat& foreground, Mat& output, Point2i location, Size tshirtSize);
+// --- Функция отображения изображения ---
+Mat overlayImage(const Mat& background, const Mat& foreground, Point2i location, Size itemSize) {
+    if (background.empty() || foreground.empty()) {
+        cerr << "[ERROR] Одно из изображений пустое!" << endl;
+        return background.clone();
+    }
 
-// Функция наложения изображения
-void overlayImage(const Mat& background, const Mat& foreground, Mat& output, Point2i location, Size tshirtSize)
-{
-	if (background.empty() || foreground.empty()) {
-		cerr << "Пустые входные изображения" << endl;
-		return;
-	}
+    if (foreground.channels() != 4) {
+        cerr << "[ERROR] Изображение одежды должно иметь 4 канала (RGBA)!" << endl;
+        return background.clone();
+    }
 
-	if (foreground.channels() != 4) {
-		cerr << "Изображение футболки должно иметь 4 канала (RGBA)" << endl;
-		return;
-	}
+    Mat output = background.clone();
+    Mat resizedItem;
+    resize(foreground, resizedItem, itemSize);
 
-	if (background.channels() != 3) {
-		cerr << "Фоновое изображение должно иметь 3 канала (RGB)" << endl;
-		return;
-	}
+    for (int y = 0; y < resizedItem.rows; ++y) {
+        for (int x = 0; x < resizedItem.cols; ++x) {
+            int bgY = location.y + y;
+            int bgX = location.x + x;
 
-	background.copyTo(output);
-	Mat resizedTshirt;
-	Size targetSize(tshirtSize.width, tshirtSize.height); // Устанавливаем размер футболки
-	resize(foreground, resizedTshirt, targetSize);
+            if (bgY >= 0 && bgY < background.rows && bgX >= 0 && bgX < background.cols) {
+                Vec4b fgPixel = resizedItem.at<Vec4b>(y, x);
+                Vec3b& bgPixel = output.at<Vec3b>(bgY, bgX);
 
-	// Позиция футболки на фоне
-	for (int y = max(location.y, 0); y < background.rows; ++y) {
-		int fY = y - location.y;
-		if (fY >= resizedTshirt.rows) break;
+                float alpha = fgPixel[3] / 255.0f;
+                for (int c = 0; c < 3; ++c) {
+                    bgPixel[c] = saturate_cast<uchar>(alpha * fgPixel[c] + (1.0f - alpha) * bgPixel[c]);
+                }
+            }
+        }
+    }
 
-		for (int x = max(location.x, 0); x < background.cols; ++x) {
-			int fX = x - location.x;
-			if (fX >= resizedTshirt.cols) break;
-
-			double opacity = ((double)resizedTshirt.at<Vec4b>(fY, fX)[3]) / 255.0;
-			for (int c = 0; opacity > 0 && c < output.channels(); ++c) {
-				output.at<Vec3b>(y, x)[c] =
-					saturate_cast<uchar>(background.at<Vec3b>(y, x)[c] * (1.0 - opacity) +
-						resizedTshirt.at<Vec4b>(fY, fX)[c] * opacity);
-			}
-		}
-	}
+    return output;
 }
 
-// Функция для извлечения ключевых точек
-vector<Point> detectBodyKeypoints(const Mat& person)
-{
-	vector<Point> keypoints;
-	cout << "Загрузка модели нейронной сети..." << endl;
+// --- Функция обнаружения ключевых точек тела ---
+vector<Point> detectBodyKeypoints(const Mat& person, const string& modelPath, const string& protoPath) {
+    vector<Point> keypoints;
 
-	string modelPath = "H:/OutfitME/outfit_me/clTest/x64/Debug/pose_iter_584000.caffemodel";
-	string protoPath = "H:/OutfitME/outfit_me/openpose/models/pose/body_25/pose_deploy.prototxt";
+    Net net = readNet(modelPath, protoPath);
+    if (net.empty()) {
+        cerr << "[ERROR] Ошибка загрузки модели OpenPose!" << endl;
+        return keypoints;
+    }
 
-	Net net = readNet(modelPath, protoPath);
-	if (net.empty()) {
-		cerr << "Ошибка загрузки модели" << endl;
-		return keypoints;
-	}
+    // Преобразование изображения в формат для модели
+    Mat blob;
+    blobFromImage(person, blob, 1.0 / 255.0, Size(368, 368), Scalar(0, 0, 0), true, false);
+    net.setInput(blob);
+    Mat output = net.forward();
 
-	cout << "Подготовка изображения для нейронной сети..." << endl;
-	Mat blob;
-	blobFromImage(person, blob, 1.0 / 255.0, Size(368, 368), Scalar(0, 0, 0), true, false);
+    int H = output.size[2]; // Высота карты
+    int W = output.size[3]; // Ширина карты
 
-	cout << "Запуск распознавания ключевых точек..." << endl;
-	net.setInput(blob);
-	Mat output = net.forward();
+    const int NUM_KEYPOINTS = 25;
+    for (int i = 0; i < NUM_KEYPOINTS; ++i) {
+        Mat heatMap(H, W, CV_32F, output.ptr(0, i));
+        Point maxLoc;
+        double maxVal;
 
-	const int NUM_KEYPOINTS = 25;
-	for (int i = 0; i < NUM_KEYPOINTS; ++i) {
-		float x = output.at<float>(0, i, 0) * person.cols;
-		float y = output.at<float>(0, i, 1) * person.rows;
-		keypoints.push_back(Point(static_cast<int>(x), static_cast<int>(y)));
-	}
+        minMaxLoc(heatMap, 0, &maxVal, 0, &maxLoc);
 
-	cout << "Найдено ключевых точек: " << keypoints.size() << endl;
-	return keypoints;
+        if (maxVal > 0.1) { // Уверенность > 0.1
+            keypoints.push_back(Point(static_cast<int>(maxLoc.x * person.cols / W),
+                static_cast<int>(maxLoc.y * person.rows / H)));
+        }
+        else {
+            keypoints.push_back(Point(-1, -1));
+        }
+    }
+
+    return keypoints;
+}
+
+// --- Функция вычисления положения и размера майки ---
+template <typename T>
+constexpr const T& clamp(const T& value, const T& low, const T& high) {
+    return (value < low) ? low : (value > high) ? high : value;
+}
+Point calculateTshirtPosition(vector<Point>& keypoints, Size tshirtSize) {
+    if (keypoints[1].x == -1 || keypoints[1].y == -1 ||
+        keypoints[2].x == -1 || keypoints[5].x == -1) {
+        cerr << "[ERROR] Точки шеи или плеч не обнаружены!" << endl;
+        return Point(0, 0);
+    }
+
+    // Изменено: располагем майку выше и по центру между плечами
+    //int x = keypoints[8].y - tshirtSize.width / 2.75; // Центр по тазу
+    int x = ((keypoints[8].x + keypoints[16].x) / 2 - tshirtSize.width / 2); // Центр по тазу
+    int y = keypoints[1].y - tshirtSize.height / 10; // Изменено: выше шеи
+    return Point(x, y);
+}
+
+Size calculateTshirtSize(vector<Point>& keypoints, const Mat& tshirt) {
+    if (keypoints[2].x == -1 || keypoints[5].x == -1 ||
+        keypoints[8].x == -1 || keypoints[8].y == -1) {
+        cerr << "[ERROR] Точки плеч или таза не обнаружены! Используется стандартный размер одежды." << endl;
+        return Size(tshirt.cols, tshirt.rows);
+    }
+
+    // Изменено: увеличиваем ширину майки
+    int bodyWidth = abs(keypoints[5].x - keypoints[2].x); // Расстояние между плечами
+    int bodyHeight = abs(keypoints[8].y - keypoints[1].y); // Высота от шеи до таза
+
+    if (bodyWidth <= 0 || bodyHeight <= 0) {
+        cerr << "[ERROR] Некорректные размеры тела! Используется стандартный размер одежды." << endl;
+        return Size(tshirt.cols, tshirt.rows);
+    }
+
+    // Изменено: Увеличил коэффициенты ширины и высоты
+    float scaleFactorWidth = static_cast<float>(bodyWidth) / tshirt.cols * 2.2; // Изменено: шире на 100%
+    float scaleFactorHeight = static_cast<float>(bodyHeight) / tshirt.rows * 1.2; // Высота увеличена на 20%
+
+    int newWidth = static_cast<int>(tshirt.cols * scaleFactorWidth);
+    int newHeight = static_cast<int>(tshirt.rows * scaleFactorHeight);
+
+    // Граничные проверки (оставил как было)
+    const int minSize = 50;
+    const int maxSize = 1000;
+    newWidth = clamp(newWidth, minSize, maxSize);
+    newHeight = clamp(newHeight, minSize, maxSize);
+
+    return Size(newWidth, newHeight);
+}
+
+// --- Функция вычисления положения и размера штанов ---
+Point calculatePantsPosition(vector<Point>& keypoints, Size pantsSize) {
+    if (keypoints[8].x == -1 || keypoints[8].y == -1 ||
+        keypoints[9].x == -1 || keypoints[12].x == -1) {
+        cerr << "[ERROR] Точки таза или бедер не обнаружены!" << endl;
+        return Point(0, 0);
+    }
+
+    // Положение штанов: среднее между центром головы и таза
+    int x = ((keypoints[8].x + keypoints[16].x) / 2 - pantsSize.width / 2);
+    int y = keypoints[8].y * 0.98; // Штаны начинаются от таза
+    return Point(x, y);
+}
+
+Size calculatePantsSize(vector<Point>& keypoints, const Mat& pants) {
+    if (keypoints[9].x == -1 || keypoints[12].x == -1 ||
+        keypoints[10].y == -1 || keypoints[13].y == -1) {
+        cerr << "[ERROR] Точки бедер или коленей не обнаружены! Используется стандартный размер одежды." << endl;
+        return Size(pants.cols, pants.rows);
+    }
+
+    // Ширина штанов: расстояние между бедрами
+    int hipWidth = abs(keypoints[5].x - keypoints[2].x);
+    // Высота штанов: расстояние от таза до коленей
+    int pantsHeight = abs(keypoints[10].y - keypoints[24].y);
+
+    if (hipWidth <= 0 || pantsHeight <= 0) {
+        cerr << "[ERROR] Некорректные размеры тела! Используется стандартный размер одежды." << endl;
+        return Size(pants.cols, pants.rows);
+    }
+
+    // Коэффициенты ширины и высоты для масштабирования штанов
+    float scaleFactorWidth = static_cast<float>(hipWidth) / pants.cols * 1.6; // Увеличение на 130%
+    float scaleFactorHeight = static_cast<float>(pantsHeight) / pants.rows * 2; // Увеличение на 130%
+
+    int newWidth = static_cast<int>(pants.cols * scaleFactorWidth);
+    int newHeight = static_cast<int>(pants.rows * scaleFactorHeight);
+
+    // Граничные проверки
+    const int minSize = 50;
+    const int maxSize = 1000;
+    newWidth = clamp(newWidth, minSize, maxSize);
+    newHeight = clamp(newHeight, minSize, maxSize);
+
+    return Size(newWidth, newHeight);
+}
+
+// --- Функция вычисления положения и размера шляпы ---
+Point calculateHatPosition(vector<Point>& keypoints, Size hatSize) {
+    if (keypoints[0].x == -1 || keypoints[0].y == -1) { // Точка головы
+        cerr << "[ERROR] Точка головы не обнаружена!" << endl;
+        return Point(0, 0);
+    }
+
+    int x = keypoints[16].x - hatSize.width / 2; // Центр по голове
+    int y = keypoints[16].y - hatSize.height;   // Над головой
+    return Point(x, y);
+}
+
+Size calculateHatSize(vector<Point>& keypoints, const Mat& hat) {
+    if (keypoints[0].x == -1 || keypoints[0].y == -1 || keypoints[1].x == -1 || keypoints[1].y == -1) {
+        cerr << "[ERROR] Точки головы не обнаружены! Используется стандартный размер шляпы." << endl;
+        return Size(hat.cols, hat.rows);
+    }
+
+    int headWidth = abs(keypoints[16].x - keypoints[17].x) * 2.5; // Примерная ширина головы
+    float scaleFactor = static_cast<float>(headWidth) / hat.cols;
+
+    int newWidth = static_cast<int>(hat.cols * scaleFactor);
+    int newHeight = static_cast<int>(hat.rows * scaleFactor);
+
+    const int minSize = 50;
+    const int maxSize = 500;
+    newWidth = clamp(newWidth, minSize, maxSize);
+    newHeight = clamp(newHeight, minSize, maxSize);
+
+    return Size(newWidth, newHeight);
+}
+
+// --- Функция вычисления положения и размера очков ---
+Point calculateGlassesPosition(vector<Point>& keypoints, Size glassesSize) {
+    if (keypoints[1].x == -1 || keypoints[1].y == -1 || keypoints[2].x == -1 || keypoints[5].x == -1) {
+        cerr << "[ERROR] Точки глаз или головы не обнаружены!" << endl;
+        return Point(0, 0);
+    }
+
+    int x = (keypoints[0].x + keypoints[18].x) / 2 - glassesSize.width / 2; // Центр между глазами
+    int y = keypoints[18].y - glassesSize.height / 3.5; // Чуть ниже верхней точки головы
+    return Point(x, y);
+}
+
+Size calculateGlassesSize(vector<Point>& keypoints, const Mat& glasses) {
+    if (keypoints[1].x == -1 || keypoints[2].x == -1 || keypoints[5].x == -1) {
+        cerr << "[ERROR] Точки глаз не обнаружены! Используется стандартный размер очков." << endl;
+        return Size(glasses.cols, glasses.rows);
+    }
+
+    int eyeDistance = abs(keypoints[18].x - keypoints[0].x); // Расстояние между глазами
+    float scaleFactor = static_cast<float>(eyeDistance) / glasses.cols * 2.2;
+
+    int newWidth = static_cast<int>(glasses.cols * scaleFactor);
+    int newHeight = static_cast<int>(glasses.rows * scaleFactor);
+
+    const int minSize = 30;
+    const int maxSize = 300;
+    newWidth = clamp(newWidth, minSize, maxSize);
+    newHeight = clamp(newHeight, minSize, maxSize);
+
+    return Size(newWidth, newHeight);
+}
+
+// --- Функция обработки запроса из Flutter ---
+void processClothingRequest(const string& clothingType, const Mat& person, const string& modelPath, const string& protoPath) {
+    //получение фото одежды
+    string clothInput = "H:\\OutfitME\\outfit_me\\clTest\\x64\\Debug\\wearPath.txt";
+    ifstream inputFile(clothInput);
+    string buffer;
+    if (!inputFile.is_open()) {
+        cerr << "Не удалось открыть wearPath.txt!" << endl;
+        return;
+    }
+    getline(inputFile, buffer);
+    string clothPath = "H:/OutfitME/outfit_me/" + buffer; // Это значение должно быть передано из Flutter !!!!!!!!!!!!!!!!!!!!!!
+
+    // Загружаем модель для ключевых точек
+    vector<Point> keypoints = detectBodyKeypoints(person, modelPath, protoPath);
+    if (keypoints.empty()) {
+        cerr << "[ERROR] Не удалось обнаружить ключевые точки!" << endl;
+        return;
+    }
+
+    Mat clothingItem, output;
+    Size itemSize;
+    Point itemLocation;
+
+    // В зависимости от запроса выбираем, что накладывать
+    if (clothingType == "tshirt") {
+        clothingItem = imread(clothPath, IMREAD_UNCHANGED);
+        itemSize = calculateTshirtSize(keypoints, clothingItem);
+        itemLocation = calculateTshirtPosition(keypoints, itemSize);
+    }
+    else if (clothingType == "pants") {
+        clothingItem = imread(clothPath, IMREAD_UNCHANGED);
+        itemSize = calculatePantsSize(keypoints, clothingItem);
+        itemLocation = calculatePantsPosition(keypoints, itemSize);
+    }
+    else if (clothingType == "hat") {
+        clothingItem = imread(clothPath, IMREAD_UNCHANGED);
+        itemSize = calculateHatSize(keypoints, clothingItem);
+        itemLocation = calculateHatPosition(keypoints, itemSize);
+    }
+    else if (clothingType == "glasses") {
+        clothingItem = imread(clothPath, IMREAD_UNCHANGED);
+        itemSize = calculateGlassesSize(keypoints, clothingItem);
+        itemLocation = calculateGlassesPosition(keypoints, itemSize);
+    }
+    else {
+        cerr << "[ERROR] Неверный тип одежды!" << endl;
+        return;
+    }
+
+    // Наложение выбранной одежды на изображение
+    output = overlayImage(person, clothingItem, itemLocation, itemSize);
+
+    // Сохранение и отображение результата
+    imwrite("result_with_selected_item.jpg", output);
+    //imshow("Result", output);
+    waitKey(0);
+}
+
+// --- Главная функция (обновленная) ---
+
+string readFileToString(const string& filePath) {
+    ifstream inputFile(filePath);
+    if (!inputFile.is_open()) {
+        cerr << "[ERROR] Не удалось открыть файл: " << filePath << endl;
+        return "";
+    }
+    string line;
+    getline(inputFile, line);
+    inputFile.close();
+    return line;
 }
 
 int main() {
-	setlocale(LC_CTYPE, "Rus");
+    setlocale(LC_ALL, "Russian");
 
-	// Загрузка изображения человека
-	Mat person = imread("H:/OutfitME/outfit_me/clTest/x64/Debug/nikita.jpg");
-	if (person.empty()) {
-		cerr << "[ERROR] Не удалось загрузить изображение человека!" << endl;
-		return -1;
-	}
-	cout << "[INFO] Размер изображения человека: " << person.size() << endl;
+    // Чтение пути к изображению
+    string personInput = "H:\\OutfitME\\outfit_me\\clTest\\x64\\Debug\\input.txt";
+    string personPath = readFileToString(personInput);
+    if (personPath.empty()) {
+        return -1;
+    }
 
-	// Загрузка изображения футболки
-	Mat tshirt = imread("H:/OutfitME/outfit_me/assets/images/tshirt.png");
-	if (tshirt.empty()) {
-		cerr << "[ERROR] Не удалось загрузить изображение футболки!" << endl;
-		return -1;
-	}
-	cout << "[INFO] Размер изображения футболки: " << tshirt.size() << endl;
+    // Загрузка изображения
+    Mat person = imread(personPath);
+    if (person.empty()) {
+        cerr << "[ERROR] Не удалось загрузить изображение: " << personPath << endl;
+        return -1;
+    }
 
-	// Проверка альфа-канала и преобразование в RGBA
-	if (tshirt.channels() == 3) {
-		cvtColor(tshirt, tshirt, COLOR_RGB2BGRA);
-	}
-	// Инициализация нейросети
-	Net net = readNetFromCaffe("H:/OutfitME/outfit_me/openpose/models/pose/body_25/pose_deploy.prototxt",
-		"H:/OutfitME/outfit_me/clTest/x64/Debug/pose_iter_584000.caffemodel");
-	if (net.empty()) {
-		cerr << "[ERROR] Не удалось загрузить нейронную сеть!" << endl;
-		return -1;
-	}
-	cout << "[INFO] Модель нейросети успешно загружена." << endl;
+    // Чтение типа одежды
+    string clothingTypePath = "H:\\OutfitME\\outfit_me\\clTest\\x64\\Debug\\wearType.txt";
+    string clothingType = readFileToString(clothingTypePath);
+    if (clothingType.empty()){
+        return -1;
+    }
 
-	// Подготовка изображения для нейросети
-	Mat blob = blobFromImage(person, 1.0 / 255.0, Size(368, 368), Scalar(0, 0, 0), true, false);
-	net.setInput(blob);
-	Mat output = net.forward();
+    string modelPath = "H:/OutfitME/outfit_me/clTest/x64/Debug/pose_iter_584000.caffemodel";
+    string protoPath = "H:/OutfitME/outfit_me/openpose/models/pose/body_25/pose_deploy.prototxt";
 
-	// Получаем ключевые точки тела
-	vector<Point> keypoints;
-	for (int i = 0; i < 25; i++) {
-		Mat heatmap = output.row(0).col(i).reshape(1, output.size[2]);
-		Point maxLoc;
-		double maxVal;
-		minMaxLoc(heatmap, nullptr, &maxVal, nullptr, &maxLoc);
+    processClothingRequest(clothingType, person, modelPath, protoPath);
 
-		int scaled_x = static_cast<int>((maxLoc.x / static_cast<float>(output.size[3])) * person.cols);
-		int scaled_y = static_cast<int>((maxLoc.y / static_cast<float>(output.size[2])) * person.rows);
-
-		keypoints.push_back(Point(scaled_x, scaled_y));
-		cout << "Keypoint " << i << ": (" << scaled_x << ", " << scaled_y << ")" << endl;
-	}
-
-	// Отображение ключевых точек на изображении
-	Mat person_with_keypoints = person.clone();
-	for (const auto& keypoint : keypoints) {
-		circle(person_with_keypoints, keypoint, 5, Scalar(0, 255, 0), -1);
-	}
-	imwrite("debug_step1_person_with_keypoints.jpg", person_with_keypoints);
-	cout << "[DEBUG] Ключевые точки на изображении сохранены." << endl;
-
-	// Основная точка для наложения футболки - грудная клетка (точка 1)
-	Point tshirtLocation(keypoints[1].x - tshirt.cols / 4, keypoints[1].y - tshirt.rows / 2);
-
-	// Рассчитываем масштаб футболки, основываясь на размерах тела
-	int bodyWidth = abs(keypoints[5].x - keypoints[2].x);  // расстояние между плечами
-	int tshirtWidth = tshirt.cols;
-	float scaleFactor = static_cast<float>(bodyWidth) / tshirtWidth;
-	// Масштабируем футболку (без деформации)
-	Size tshirtSize(static_cast<int>(tshirt.cols * scaleFactor), static_cast<int>(tshirt.rows * scaleFactor));
-
-	// Отображение масштаба футболки
-	Mat resized_tshirt;
-	resize(tshirt, resized_tshirt, tshirtSize);
-	imshow("Resized T-Shirt", resized_tshirt);
-	imwrite("debug_step2_resized_tshirt.jpg", resized_tshirt);
-	cout << "[DEBUG] Масштабированная футболка сохранена." << endl;
-
-	// Наложение футболки на изображение
-	Mat output_with_tshirt;
-	overlayImage(person, tshirt, output_with_tshirt, tshirtLocation, tshirtSize);
-
-	// Сохранение изображения с наложенной футболкой
-	imwrite("debug_step3_with_tshirt.jpg", output_with_tshirt);
-	cout << "[DEBUG] Изображение с наложенной футболкой сохранено." << endl;
-
-	// Отображение финального изображения
-	imshow("Final Output with T-Shirt", output_with_tshirt);
-	waitKey(0);
-
-	return 0;
+    return 0;
 }
 
-/*#include <opencv2/opencv.hpp>
-#include <iostream>
-#include <fstream>
-#include <string>
-
-int main() {
-	setlocale(LC_ALL, "rus");
-	std::string inputPath;
-	std::ifstream inputFile("H:\\OutfitME\\outfit_me\\clTest\\x64\\Debug\\input.txt"); //чекнуть разницу между вручную и кодом
-
-	if (!inputFile.is_open()) {
-		std::cerr << "Не удалось открыть input.txt!" << std::endl;
-		return -1;
-	}
-
-	std::getline(inputFile, inputPath);
-	inputFile.close();
-
-	std::cout << "Чтение пути изображения: " << inputPath << std::endl;
-
-	// Проверка, что путь не пустой
-	if (inputPath.empty()) {
-		std::cerr << "Путь к изображению пустой!" << std::endl;
-		return -1;
-	}
-
-	// Чтение изображения
-	cv::Mat image = cv::imread(inputPath);
-	if (image.empty()) {
-		std::cerr << "Не удалось загрузить изображение по пути: " << inputPath << std::endl;
-		return -1;
-	}
-
-	std::cout << "Изображение загружено успешно!" << std::endl;
-
-	// Преобразование изображения в HSV
-	cv::Mat hsvImage;
-	cv::cvtColor(image, hsvImage, cv::COLOR_BGR2HSV);
-
-	cv::Scalar lowerGreen(35, 40, 40);
-	cv::Scalar upperGreen(85, 255, 255);
-	cv::Mat greenMask;
-
-	// Создание маски для выделения зеленого цвета
-	cv::inRange(hsvImage, lowerGreen, upperGreen, greenMask);
-
-	cv::Mat nonGreenImage;
-	cv::bitwise_not(greenMask, greenMask);  // Инвертируем маску
-	cv::bitwise_and(image, image, nonGreenImage, greenMask);  // Применяем маску
-
-	std::string outputPath = "rofl.png";
-	if (cv::imwrite(outputPath, nonGreenImage)) {
-		std::cout << "Изображение сохранено успешно: " << outputPath << std::endl;
-	}
-	else {
-		std::cerr << "Ошибка при сохранении изображения!" << std::endl;
-		return -1;
-	}
-
-	// Запись пути к сохраненному изображению в output.txt
-	std::ofstream outputFile("output.txt");
-	if (!outputFile.is_open()) {
-		std::cerr << "Не удалось открыть output.txt!" << std::endl;
-		return -1;
-	}
-	outputFile << outputPath;
-	outputFile.close();
-
-	std::cout << "Путь к изображению записан в output.txt." << std::endl;
-
-	// Для удержания консоли открытой (если программа сразу закрывается)
-	system("pause");
-
-	return 0;
-}
 
 
 /*#include <opencv2/opencv.hpp>

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:window_size/window_size.dart';
 import 'final.dart';
 import 'package:process_run/process_run.dart';
+import 'dart:ui';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -131,14 +132,28 @@ class ShowCase extends StatefulWidget {
 
 class _ShowCaseOfImages extends State<ShowCase> {
   List<String> images = [
-    "assets/images/pivo.png",
+    "assets/images/tshirt3.png",
+    "assets/images/glasses.png",
+    "assets/images/hat2.png",
     "assets/images/pants.png",
-    "assets/images/shorts.png",
-    "assets/images/nikitasOutfit.png",
-    "assets/images/Black.png",
+    "assets/images/pants2.png",
     "assets/images/tshirt.png",
-    "assets/images/printedTshirt.png",
-    "assets/images/textTshirt.png"
+    "assets/images/hat.png",
+    "assets/images/tshirt2.png",
+    "assets/images/glasses2.png",
+    "assets/images/tshirt4.png"
+  ];
+  List<String> clothType = [
+    "tshirt",
+    "glasses",
+    "hat",
+    "pants",
+    "pants",
+    "tshirt",
+    "hat",
+    "tshirt",
+    "glasses",
+    "tshirt"
   ];
   bool isPressed = false;
   int get _itemCount => 500;
@@ -146,7 +161,8 @@ class _ShowCaseOfImages extends State<ShowCase> {
   String textPhoto = "Выбрать фото";
   File? _selectedImage;
   int wearIndex = 0;
-  File? wearType = File('clTest/x64/Debug/wearPath.txt');
+  File? cloth = File('clTest/x64/Debug/wearPath.txt');
+  File wearType = File('clTest/x64/Debug/wearType.txt');
 
   Widget _buildItemList(BuildContext context, int index) {
     int adjustedIndex = index % images.length;
@@ -293,12 +309,19 @@ class _ShowCaseOfImages extends State<ShowCase> {
                   print('Ошибка при запуске exe файла: $e');
                 }
                 try {
-                  await wearType!.writeAsString(images[wearIndex]);
+                  await cloth!.writeAsString(images[wearIndex]);
                   print(
                       ' файл с одеждой успешно записан с индексом $wearIndex!');
                 } catch (e) {
                   print(" Ошибка сохранения пути одежды $e!");
                 }
+                try {
+                  await wearType.writeAsString(clothType[wearIndex]);
+                  print("тип одежды успешно записан");
+                } catch (e) {
+                  print("ошибка записи типа одежды! $e");
+                }
+
                 Navigator.push(
                     context,
                     MaterialPageRoute(

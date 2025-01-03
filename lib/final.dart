@@ -26,7 +26,7 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> downloadFile() async {
-    const filePath = 'H:\\OutfitME\\outfit_me\\rofl.png';
+    const filePath = 'result_with_selected_item.jpg';
 
     try {
       final directory =
