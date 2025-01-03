@@ -1,8 +1,8 @@
-# outfitme_final
+#OutfitME
 
 Project for university lab.
 
-## Getting Started
+##How getting started
 
 This project is a online wardrobe for windows.
 
