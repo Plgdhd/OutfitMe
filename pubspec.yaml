@@ -10,17 +10,54 @@ dependencies:
   flutter:
     sdk: flutter
   scroll_snap_list: ^0.8.0
+  image_picker: ^1.1.2
+  window_size: ^0.1.0
+  ffi: ^2.0.1
+  process_run: ^1.2.2+1
+  dio: ^5.0.0
+  path_provider: ^2.0.11
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.2.18
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: "assets/images/fitRed.jpg"
+  android: true
+  ios: true
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/fitRed.jpg" # Передний план
+
+
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Bold.ttf
+        
+    - family: Astro
+      fonts:
+        - asset: assets/fonts/astro.ttf
   assets:
     - assets/images/fitGrey.webp
     - assets/images/fitRed.jpg
-    - assets/icons/fit.jpg
-    - assets/images/pivo.png
-    - assets/images/MegaShoes.png
+    - assets/images/glasses.png
+    - assets/images/glasses2.png
+    - assets/images/hat.png
+    - assets/images/hat2.png
+    - assets/images/pants.png
+    - assets/images/pants2.png
+    - assets/images/tshirt.png
+    - assets/images/tshirt2.png
+    - assets/images/tshirt3.png
+    - assets/images/tshirt4.png
