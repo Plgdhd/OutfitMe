@@ -2,7 +2,7 @@
 
 Project for university lab.
 
-##How getting started
+## How getting started
 
 This project is a online wardrobe for windows.
 
